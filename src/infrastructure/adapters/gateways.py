@@ -1,12 +1,7 @@
-"""Concrete SQLAlchemy adapters implementing the application's ports.
-
-A single AsyncSession is scoped to the request. Transactions remain local to each use case;
-ORM writes and SQL projections use the same PostgreSQL connection/session context.
-"""
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.application.context.identity import Actor
-from src.application.dto.expenses import ExpenseCreate, ExpensePatch
+from src.usecase.context.identity import Actor
+from src.usecase.dto.expenses import ExpenseCreate, ExpensePatch
 from src.infrastructure.adapters import categories, expenses, reports, notifications
 
 class SqlCategoryAdapter:

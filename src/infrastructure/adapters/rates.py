@@ -3,7 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.application.errors import AppError
+from src.usecase.errors import AppError
 from src.domain.models.rates import ExchangeRate
 from src.domain.models.expenses import Expense
 

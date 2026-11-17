@@ -2,9 +2,9 @@
 from datetime import timedelta
 from uuid import uuid4
 from sqlalchemy import select
-from src.application.errors import AppError
-from src.application.dto.receipts import ReceiptUploadURL, ReceiptDownload
-from src.application.interfaces.gateways import StoragePort
+from src.usecase.errors import AppError
+from src.usecase.dto.receipts import ReceiptUploadURL, ReceiptDownload
+from src.usecase.interfaces.gateways import StoragePort
 from src.infrastructure.database.session import utcnow
 from src.domain.models.expenses import Expense
 from src.domain.models.receipts import ReceiptUpload, ReceiptCleanup

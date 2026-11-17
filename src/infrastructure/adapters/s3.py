@@ -5,7 +5,7 @@ import aioboto3
 from botocore.config import Config as BotoConfig
 from botocore.exceptions import ClientError
 from src.main.config import get_settings
-from src.application.errors import AppError
+from src.usecase.errors import AppError
 
 from src.infrastructure.adapters.storage_constants import MIME_TO_EXT, MAX_RECEIPT_BYTES
 

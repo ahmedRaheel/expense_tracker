@@ -1,8 +1,8 @@
 """PostgreSQL + Redis implementation of AuthenticationPort."""
 import asyncio
 from sqlalchemy import select, update
-from src.application.errors import AppError
-from src.application.dto.auth import UserDTO, TokenPair
+from src.usecase.errors import AppError
+from src.usecase.dto.auth import UserDTO, TokenPair
 from src.domain.models.auth import User, RefreshToken
 from src.infrastructure.database.session import utcnow
 from src.infrastructure.adapters.auth_security import (

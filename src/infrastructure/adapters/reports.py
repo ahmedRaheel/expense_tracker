@@ -2,9 +2,9 @@
 from decimal import Decimal
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.application.context.identity import Actor
-from src.application.errors import AppError
-from src.application.dto.reports import MonthlyCategoryDTO, MonthlyReport
+from src.usecase.context.identity import CurrentUser
+from src.usecase.errors import AppError
+from src.usecase.dto.reports import MonthlyCategoryDTO, MonthlyReport
 
 # One PostgreSQL statement. As-of rates via LATERAL; two month rows per
 # category plus LAG for previous month. The query also counts missing rates.
@@ -58,7 +58,7 @@ ORDER BY name,category_id
 
 
 
-async def build_monthly_report(session: AsyncSession, user: Actor, year: int, month: int) -> MonthlyReport:
+async def build_monthly_report(session: AsyncSession, user: CurrentUser, year: int, month: int) -> MonthlyReport:
     rows = (await session.execute(MONTHLY_SQL, {"year": year, "month": month, "base": user.base_currency, "user_id": user.id})).mappings().all()
     if any(row["missing_rates"] or row["previous_missing_rates"] for row in rows):
         raise AppError(422, "RATE_NOT_FOUND", "Cannot report because expense-date exchange rates are missing")

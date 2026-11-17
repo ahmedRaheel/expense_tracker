@@ -12,14 +12,14 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.main.config import get_settings
-from src.application.validators import require_idempotency_key
+from src.usecase.validator import require_idempotency_key
 from src.infrastructure.database.session import utcnow
-from src.application.errors import AppError
+from src.usecase.errors import AppError
 from src.domain.models.categories import Category
 from src.domain.models.expenses import Expense, IdempotencyRecord
 from src.domain.models.receipts import ReceiptCleanup
-from src.application.context.identity import Actor
-from src.application.dto.expenses import ExpenseCreate, ExpenseDTO, ExpensePatch, ExpenseResults
+from src.usecase.context.identity import CurrentUser
+from src.usecase.dto.expenses import ExpenseCreate, ExpenseDTO, ExpensePatch, ExpenseResults
 from src.infrastructure.adapters.categories import emit_crossings, locked_category
 from src.infrastructure.adapters.rates import first_of_month, month_total, to_base
 
@@ -62,7 +62,7 @@ async def poke_worker(redis_client):
         pass
 
 
-async def create_expense(session: AsyncSession, user: Actor, payload: ExpenseCreate, key: str, redis_client) -> tuple[dict, bool]:
+async def create_expense(session: AsyncSession, user: CurrentUser, payload: ExpenseCreate, key: str, redis_client) -> tuple[dict, bool]:
     require_idempotency_key(key)
     digest = body_digest(payload)
     now = utcnow()
@@ -98,7 +98,7 @@ async def create_expense(session: AsyncSession, user: Actor, payload: ExpenseCre
     return view, False
 
 
-async def get_expense(session: AsyncSession, user: Actor, expense_id: UUID) -> ExpenseDTO:
+async def get_expense(session: AsyncSession, user: CurrentUser, expense_id: UUID) -> ExpenseDTO:
     row = await session.scalar(select(Expense).where(Expense.id == expense_id, Expense.user_id == user.id))
     if row is None:
         raise AppError(404, "EXPENSE_NOT_FOUND", "Expense not found")
@@ -106,7 +106,7 @@ async def get_expense(session: AsyncSession, user: Actor, expense_id: UUID) -> E
 
 
 async def list_expenses(
-    session: AsyncSession, user: Actor, *, cursor: str | None, limit: int,
+    session: AsyncSession, user: CurrentUser, *, cursor: str | None, limit: int,
     category_id: UUID | None, date_from: date | None, date_to: date | None,
     min_amount: Decimal | None, max_amount: Decimal | None, currency: str | None, q: str | None,
 ) -> ExpenseResults:
@@ -144,7 +144,7 @@ async def list_expenses(
     return ExpenseResults(items=items, next_cursor=next_cursor)
 
 
-async def update_expense(session: AsyncSession, user: Actor, expense_id: UUID, expected_version: int, payload: ExpensePatch, redis_client) -> ExpenseDTO:
+async def update_expense(session: AsyncSession, user: CurrentUser, expense_id: UUID, expected_version: int, payload: ExpensePatch, redis_client) -> ExpenseDTO:
     async with session.begin():
         old = await session.scalar(select(Expense).where(Expense.id == expense_id, Expense.user_id == user.id))
         if old is None:
@@ -173,7 +173,7 @@ async def update_expense(session: AsyncSession, user: Actor, expense_id: UUID, e
     return result
 
 
-async def delete_expense(session: AsyncSession, user: Actor, expense_id: UUID, redis_client) -> None:
+async def delete_expense(session: AsyncSession, user: CurrentUser, expense_id: UUID, redis_client) -> None:
     async with session.begin():
         old = await session.scalar(select(Expense).where(Expense.id == expense_id, Expense.user_id == user.id))
         if old is None:
@@ -186,5 +186,4 @@ async def delete_expense(session: AsyncSession, user: Actor, expense_id: UUID, r
         await session.delete(old)
         await session.flush()
         after = await month_total(session, cat.id, user.base_currency, month)
-        # No new threshold alerts for decreases; historical alerts remain immutable.
     await poke_worker(redis_client)

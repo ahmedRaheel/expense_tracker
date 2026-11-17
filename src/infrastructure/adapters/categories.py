@@ -5,13 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.models.categories import Category
 from src.domain.models.outbox import OutboxEvent
-from src.application.context.identity import Actor
+from src.usecase.context.identity import Actor
 from src.domain.policies.budget import crossed_thresholds
 from src.infrastructure.adapters.rates import month_total
 
 
 async def locked_category(session: AsyncSession, *, category_id: UUID, user_id: UUID) -> Category:
-    from src.application.errors import AppError
+    from src.usecase.errors import AppError
     cat = await session.scalar(select(Category).where(Category.id == category_id, Category.user_id == user_id).with_for_update())
     if cat is None:
         raise AppError(404, "CATEGORY_NOT_FOUND", "Category not found")
@@ -26,8 +26,8 @@ def emit_crossings(session: AsyncSession, category: Category, month: date, befor
 
 
 async def create_category(session: AsyncSession, user: Actor, payload: "CategoryCreate") -> "CategoryDTO":
-    from src.application.errors import AppError
-    from src.application.dto.categories import CategoryDTO
+    from src.usecase.errors import AppError
+    from src.usecase.dto.categories import CategoryDTO
     name = payload.name
     if await session.scalar(select(Category.id).where(Category.user_id == user.id, Category.normalized_name == name.casefold())):
         raise AppError(409, "CATEGORY_EXISTS", "Category already exists")
@@ -41,8 +41,8 @@ async def create_category(session: AsyncSession, user: Actor, payload: "Category
 async def list_categories(session: AsyncSession, user: Actor) -> list["CategoryDTO"]:
     from sqlalchemy import text
     from src.infrastructure.database.session import utcnow
-    from src.application.errors import AppError
-    from src.application.dto.categories import CategoryDTO
+    from src.usecase.errors import AppError
+    from src.usecase.dto.categories import CategoryDTO
     start = utcnow().date().replace(day=1)
     query = text("""
         SELECT c.id,c.name,c.monthly_budget,

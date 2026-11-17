@@ -8,8 +8,8 @@ import aiofiles.os
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from src.main.config import get_settings
-from src.application.errors import AppError
-from src.application.dto.imports import ImportJobDTO
+from src.usecase.errors import AppError
+from src.usecase.dto.imports import ImportJobDTO
 from src.domain.models.imports import ImportJob, ImportErrorRow
 from src.infrastructure.adapters.expenses import poke_worker
 

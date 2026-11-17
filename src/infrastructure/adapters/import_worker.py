@@ -18,7 +18,7 @@ from src.domain.models.rates import ExchangeRate
 from src.domain.models.expenses import Expense
 from src.domain.models.imports import ImportJob, ImportErrorRow
 from src.domain.models.auth import User
-from src.application.dto.expenses import ExpenseCreate
+from src.usecase.dto.expenses import ExpenseCreate
 from src.infrastructure.adapters.categories import emit_crossings, locked_category
 from src.infrastructure.adapters.rates import first_of_month, month_total
 

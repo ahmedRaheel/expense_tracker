@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.main.config import get_settings
 from src.infrastructure.database.session import SessionFactory, utcnow
-from src.application.errors import AppError
+from src.usecase.errors import AppError
 from src.domain.models.auth import RefreshToken, User
-from src.application.context.identity import Actor
+from src.usecase.context.identity import Actor
 
 hasher = PasswordHash.recommended()
 
