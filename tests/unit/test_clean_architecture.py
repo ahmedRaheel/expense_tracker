@@ -12,14 +12,14 @@ from src.usecase.errors import AppError
 from src.usecase.interactors.expenses import ExpenseInteractor
 from src.usecase.interactors.categories import CategoryInteractor
 from src.usecase.validator import currency_code
-from src.usecase.context.identity import Actor
+from src.usecase.context.identity import CurrentUser
 from src.domain.policies.budget import crossed_thresholds
 from src.domain.value_object.money import Money
 from src.domain.exceptions import DomainError
 
 
 def make_current_user():
-    return Actor(id=uuid4(), email="someone@example.com", base_currency="PKR", session_version=1)
+    return CurrentUser(id=uuid4(), email="someone@example.com", base_currency="PKR", session_version=1)
 
 
 def test_actor_is_immutable():
