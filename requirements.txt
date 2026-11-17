@@ -16,7 +16,7 @@ pytest
 aioboto3
 botocore
 aiofiles
-
+pytest-asyncio 
 
 
 
