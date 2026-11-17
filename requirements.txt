@@ -12,6 +12,11 @@ pwdlib[argon2]>=0.2,<1
 python-multipart>=0.0.9
 pydantic[email]>=2.9,<3
 redis
+pytest
+aioboto3
+botocore
+aiofiles
+
 
 
 
