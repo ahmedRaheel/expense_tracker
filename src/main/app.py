@@ -5,6 +5,8 @@ from api_version import API_V1_PREFIX
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
+from api.exception_handlers import install_exception_handlers
+from api.v1 import auth, categories, expenses, imports, notifications, receipts, reports
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,7 +39,10 @@ def create_app() -> FastAPI:
     async def health():
         return {"status": "ok"}
 
-    
+    for module in (auth, categories, imports, expenses, reports, notifications, receipts):
+        app.include_router(module.router, prefix=API_V1_PREFIX)
+    install_exception_handlers(app)
+
     return app
 
 app = create_app()
