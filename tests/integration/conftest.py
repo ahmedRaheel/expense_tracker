@@ -16,7 +16,8 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from src.main.config import get_settings
-from src.infrastructure.database.session import engine, SessionFactory, Base
+from src.infrastructure.database.session import engine, SessionFactory
+from src.domain.models.base import Base
 from src.main.app import app
 from src.domain.models.rates import ExchangeRate
 from scripts.seed_rates import RATES
