@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.usecase.context.identity import Actor
+from src.usecase.context.identity import CurrentUser
 from src.usecase.dto.expenses import ExpenseCreate, ExpensePatch
 from src.infrastructure.adapters import categories, expenses, reports, notifications
 

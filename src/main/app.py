@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
-from config import get_settings
-from api_version import API_V1_PREFIX
+from src.main.config import get_settings
+from src.main.api_version import API_V1_PREFIX
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
-from api.exception_handlers import install_exception_handlers
-from api.v1 import auth, categories, expenses, imports, notifications, receipts, reports
+from src.api.exception_handlers import install_exception_handlers
+from src.api.v1 import auth, categories, expenses, imports, notifications, receipts, reports
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

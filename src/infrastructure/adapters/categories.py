@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.models.categories import Category
 from src.domain.models.outbox import OutboxEvent
-from src.usecase.context.identity import Actor
+from src.usecase.context.identity import CurrentUser
 from src.domain.policies.budget import crossed_thresholds
 from src.infrastructure.adapters.rates import month_total
 
@@ -25,7 +25,7 @@ def emit_crossings(session: AsyncSession, category: Category, month: date, befor
     return bool(events)
 
 
-async def create_category(session: AsyncSession, user: Actor, payload: "CategoryCreate") -> "CategoryDTO":
+async def create_category(session: AsyncSession, user: CurrentUser, payload: "CategoryCreate") -> "CategoryDTO":
     from src.usecase.errors import AppError
     from src.usecase.dto.categories import CategoryDTO
     name = payload.name
@@ -38,7 +38,7 @@ async def create_category(session: AsyncSession, user: Actor, payload: "Category
     return CategoryDTO(id=category.id, name=category.name, monthly_budget=category.monthly_budget)
 
 
-async def list_categories(session: AsyncSession, user: Actor) -> list["CategoryDTO"]:
+async def list_categories(session: AsyncSession, user: CurrentUser) -> list["CategoryDTO"]:
     from sqlalchemy import text
     from src.infrastructure.database.session import utcnow
     from src.usecase.errors import AppError

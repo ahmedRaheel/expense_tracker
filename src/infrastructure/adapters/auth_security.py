@@ -13,7 +13,7 @@ from src.main.config import get_settings
 from src.infrastructure.database.session import SessionFactory, utcnow
 from src.usecase.errors import AppError
 from src.domain.models.auth import RefreshToken, User
-from src.usecase.context.identity import Actor
+from src.usecase.context.identity import CurrentUser
 
 hasher = PasswordHash.recommended()
 
@@ -50,14 +50,14 @@ def read_access(token: str) -> tuple[UUID, int]:
         raise AppError(401, "INVALID_TOKEN", "Invalid or expired access token", headers={"WWW-Authenticate": "Bearer"}) from exc
 
 
-async def resolve_actor(token: str) -> Actor:
+async def resolve_actor(token: str) -> CurrentUser:
     """Verify JWT against database session_version, then return a detached domain identity."""
     user_id, version = read_access(token)
     async with SessionFactory() as session:
         user = await session.get(User, user_id)
         if user is None or user.session_version != version:
             raise AppError(401, "INVALID_TOKEN", "Token revoked or user does not exist")
-        return Actor(id=user.id, email=user.email, base_currency=user.base_currency,
+        return CurrentUser(id=user.id, email=user.email, base_currency=user.base_currency,
                      session_version=user.session_version)
 
 

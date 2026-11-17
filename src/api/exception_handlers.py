@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 log = logging.getLogger(__name__)
 
 
-from usecase.errors import AppError
+from src.usecase.errors import AppError
 
 
 def response(request: Request, status: int, code: str, message: str, details=None, headers=None):

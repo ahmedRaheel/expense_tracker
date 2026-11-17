@@ -1,6 +1,6 @@
-from usecase.interfaces.gateways import AuthenticationPort
-from usecase.dto.auth import RegisterRequest, LoginRequest, RefreshRequest, TokenPair, UserDTO
-from usecase.context.identity import CurrentUser
+from src.usecase.interfaces.gateways import AuthenticationPort
+from src.usecase.dto.auth import RegisterRequest, LoginRequest, RefreshRequest, TokenPair, UserDTO
+from src.usecase.context.identity import CurrentUser
 
 class AuthenticationInteractor:
     def __init__(self, gateway: AuthenticationPort) -> None:
