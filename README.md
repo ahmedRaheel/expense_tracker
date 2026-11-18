@@ -280,3 +280,135 @@ Additional tests cover login, logout, invalid JWTs, filter/cursor tampering, `If
 - [ ] Do a final secret scan before GitHub submission; add reviewers as collaborators if repository is private.
 
 **AI disclosure (assessment requirement):** AI-assisted tooling was used to help S3 mocks, coverage configuration and AWS deployment notes
+
+---
+
+## Appendix — Running integration tests and coverage locally from VS Code
+
+These instructions use your **existing local PostgreSQL server** and the Redis 8 Docker container already published on `localhost:6379`. There is **no need to deploy the FastAPI application** or start Uvicorn to run the `httpx.AsyncClient` integration suite.
+
+### 1. Create a dedicated PostgreSQL test database
+
+You can use the **same PostgreSQL server** as your application, but you must create a **separate database**. Open pgAdmin Query Tool while connected to an existing database (such as `postgres`) and run:
+
+```sql
+CREATE DATABASE expenses_test;
+```
+
+> **Safety:** Do not run the integration tests against your normal application database. The `clean_db` fixture truncates tables before tests. Your existing fixture requires the database name to be exactly `expenses_test`.
+
+From the VS Code PowerShell terminal, go to the project root and set a connection URL with **your real local PostgreSQL credentials and port**:
+
+```powershell
+cd C:\expense_tracker
+$env:DATABASE_URL="postgresql+asyncpg://postgres:YOUR_PASSWORD@localhost:5432/expenses_test"
+```
+
+Replace `YOUR_PASSWORD` and `5432` if your installation uses a different password or port. A password containing URL-reserved characters such as `@`, `#`, or `/` must be percent-encoded in the connection URL.
+
+### 2. Apply Alembic migrations to the test database
+
+Your `alembic/env.py` reads its connection configuration from the environment or `.env`. **Verify that the effective URL points to `expenses_test`** before applying migrations; the environment variable must take precedence for this terminal session.
+
+```powershell
+python -m alembic upgrade head
+```
+
+Do not run migrations against your normal development database while setting up the test database.
+
+### 3. Reuse your running Redis container
+
+Your existing Redis Docker container exposes host port **6379**, not 6380. Configure integration tests to use database **1**:
+
+```powershell
+$env:REDIS_URL="redis://localhost:6379/1"
+```
+
+Check it from PowerShell:
+
+```powershell
+docker exec redis redis-cli -n 1 PING
+```
+
+Expected result: `PONG`. Database 1 is logically separate from database 0, but confirm that **no other application uses Redis DB 1**, because the test fixtures may clear its keys. Run pytest from the same PowerShell session so the environment variables are inherited.
+
+### 4. Run tests from VS Code
+
+First execute only integration tests without the global coverage gate, to troubleshoot failures:
+
+```powershell
+python -m pytest tests/integration -x -v -o "addopts="
+```
+
+Run unit tests independently:
+
+```powershell
+python -m pytest tests/unit -v -o "addopts="
+```
+
+Once PostgreSQL and Redis are reachable and integration tests pass, execute the full suite with the project's configured coverage requirement:
+
+```powershell
+python -m pytest
+```
+
+### 5. Generate pytest coverage reports
+
+Install the coverage plugin if it is missing:
+
+```powershell
+python -m pip install pytest-cov
+```
+
+From the project root, generate terminal, HTML, and XML coverage reports while enforcing the **85% minimum**:
+
+```powershell
+cd C:\expense_tracker
+python -m pytest --cov=src --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml --cov-fail-under=85
+```
+
+Your `pytest.ini` already defines coverage options under `addopts`. The command above can repeat report settings; that is harmless for most configurations, but to **replace** all configured coverage flags with precisely these reports, use:
+
+```powershell
+python -m pytest -o "addopts=" --cov=src --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml --cov-fail-under=85
+```
+
+| Report | Location | Purpose |
+|---|---|---|
+| Terminal coverage summary | VS Code terminal | Overall percentage and uncovered lines |
+| HTML | `htmlcov/index.html` | Browse coverage by file and line |
+| XML | `coverage.xml` | CI/CD or assessment tooling |
+
+Open the HTML report from PowerShell:
+
+```powershell
+start .\htmlcov\index.html
+```
+
+**Illustrative output only — not measured project coverage:**
+
+```text
+Name                              Stmts   Miss  Cover
+-----------------------------------------------------
+src/usecase/expenses.py             120     10    92%
+src/usecase/auth.py                 100     15    85%
+src/infrastructure/database.py       80      8    90%
+-----------------------------------------------------
+TOTAL                               300     33    89%
+```
+
+### 6. Check the 85% assessment requirement
+
+The assessment requires **85% or higher coverage** across the **complete unit and integration suite**. Since `pytest.ini` already contains `--cov-fail-under=85`, the simplest final command is:
+
+```powershell
+python -m pytest
+```
+
+To inspect the current percentage **without failing merely because coverage is below 85%**, temporarily override the configuration:
+
+```powershell
+python -m pytest -o "addopts=" --cov=src --cov-report=html --cov-report=term-missing --cov-fail-under=0
+```
+
+A passing test suite does **not** automatically mean 85% coverage. After running all tests successfully, copy the actual `TOTAL` value from pytest into the assessment-status section at the top of this README. Do not substitute the example percentages above for the measured result.
