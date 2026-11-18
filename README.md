@@ -279,4 +279,4 @@ Additional tests cover login, logout, invalid JWTs, filter/cursor tampering, `If
 - [ ] Move CSV file spool to shared S3/EFS before horizontally scaling API and worker services.
 - [ ] Do a final secret scan before GitHub submission; add reviewers as collaborators if repository is private.
 
-**AI disclosure (assessment requirement):** AI-assisted tooling was used to help S3 mocks, coverage configuration and AWS deployment notes. Review every line, run tests, and be prepared to explain and change any portion during the assessment interview.
+**AI disclosure (assessment requirement):** AI-assisted tooling was used to help S3 mocks, coverage configuration and AWS deployment notes
