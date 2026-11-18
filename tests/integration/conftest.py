@@ -14,6 +14,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from src.main.config import get_settings
 from src.infrastructure.database.session import engine, SessionFactory
@@ -25,7 +26,11 @@ from scripts.seed_rates import RATES
 
 @pytest.fixture(autouse=True)
 async def clean_db(tmp_path):
-    assert "test" in get_settings().database_url.lower(), "REFUSING to truncate a non-test DB"
+    # Destructive TRUNCATE/Redis FLUSHDB are allowed ONLY against dedicated test resources.
+    url = make_url(get_settings().database_url)
+    assert url.database == "expenses_test", "REFUSING to truncate a non-test DB"
+    assert url.get_backend_name() == "postgresql", "PostgreSQL is required, not SQLite"
+    assert get_settings().redis_url.rstrip("/").endswith("/1"), "REFUSING to flush non-test Redis DB"
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             # TRUNCATE CASCADE for test isolation; identifiers come only from SQLAlchemy metadata.

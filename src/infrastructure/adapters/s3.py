@@ -64,7 +64,11 @@ class S3Storage:
                     raise AppError(422, "RECEIPT_TYPE_INVALID", "Receipt content does not match allowed file type")
                 return size
         except ClientError as exc:
-            raise AppError(422, "RECEIPT_NOT_FOUND", "Uploaded receipt was not found in object storage") from exc
+            code = str(exc.response.get("Error", {}).get("Code", ""))
+            if code in {"404", "NoSuchKey", "NotFound"}:
+                raise AppError(422, "RECEIPT_NOT_FOUND", "Uploaded receipt was not found in object storage") from exc
+            # Never disguise S3 permission failures or transient outages as missing files.
+            raise AppError(502, "STORAGE_UNAVAILABLE", "Unable to verify uploaded receipt") from exc
 
     async def download_url(self, key: str):
         async with self.client(public=True) as s3:
